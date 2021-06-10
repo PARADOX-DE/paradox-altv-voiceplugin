@@ -37,18 +37,18 @@ const char* ts3plugin_name() {
 #ifdef _WIN32
 	static char* result = NULL;
 	if(!result) {
-		const wchar_t* name = L"PARADOX Voice";
-		if(wcharToUtf8(name, &result) == -1) result = "PARADOX Voice";
+		const wchar_t* name = L"PARADOX_RP-Voice";
+		if(wcharToUtf8(name, &result) == -1) result = "PARADOX_RP-Voice";
 	}
 
 	return result;
 #else
-	return "PARADOX Voice";
+	return "PARADOX_RP-Voice";
 #endif
 }
 
 const char* ts3plugin_version() {
-    return "0.1";
+    return "0.0.0.1";
 }
 
 int ts3plugin_apiVersion() {
@@ -56,11 +56,11 @@ int ts3plugin_apiVersion() {
 }
 
 const char* ts3plugin_author() {
-    return "PARADOX - Nova_ and Captcha.";
+    return "Nova & Captcha.";
 }
 
 const char* ts3plugin_description() {
-    return "GTA V - Voice plugin for alt:V Multiplayer (made by altMP Team)";
+    return "GTA 5 Voice-Plugin for alt:V Multiplayer (c) 2021 \nContact: https://discord.gg/kHUu2hnyJH";
 }
 
 void ts3plugin_setFunctionPointers(const struct TS3Functions funcs) {
