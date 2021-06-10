@@ -1,6 +1,7 @@
 #pragma once
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32)
 #pragma warning (disable : 4100)
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 

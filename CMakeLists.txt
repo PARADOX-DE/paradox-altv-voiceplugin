@@ -84,6 +84,6 @@ add_library(
   ${PROJECT_SOURCE_FILES}
 )
 
-#if (WIN32)
-#  target_link_libraries(${PROJECT_NAME} libMinHook.x64.lib d3d11.lib D3dcompiler.lib)
-#endif (WIN32)
+if (WIN32)
+  target_link_libraries(${PROJECT_NAME} wsock32.lib ws2_32.lib)
+endif (WIN32)

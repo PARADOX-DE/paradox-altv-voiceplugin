@@ -1,5 +1,6 @@
 #include "main.hpp"
 #include "injector.hpp"
+#include "websocket.hpp"
 
 static struct TS3Functions ts3Functions;
 
@@ -56,11 +57,11 @@ int ts3plugin_apiVersion() {
 }
 
 const char* ts3plugin_author() {
-    return "PARADOX - Nova_ and Captcha.";
+    return "Made by Nova and Captcha. (PARADOX RP)";
 }
 
 const char* ts3plugin_description() {
-    return "GTA V - Voice plugin for alt:V Multiplayer (made by altMP Team)";
+    return "Voice plugin for alt:V Multiplayer (made by altMP Team)";
 }
 
 void ts3plugin_setFunctionPointers(const struct TS3Functions funcs) {
@@ -80,13 +81,13 @@ int ts3plugin_init() {
     ts3Functions.getConfigPath(configPath, PATH_BUFSIZE);
 	ts3Functions.getPluginPath(pluginPath, PATH_BUFSIZE, pluginID);
 
-	printf("PLUGIN: App path: %s\nResources path: %s\nConfig path: %s\nPlugin path: %s\n", appPath, resourcesPath, configPath, pluginPath);
-
+	CWebSocket::Instance().Init();
     return 0;
 }
 
 void ts3plugin_shutdown() {
     printf("PLUGIN: shutdown\n");
+	CWebSocket::Instance().Disable();
 
 	if(pluginID) {
 		free(pluginID);
@@ -113,21 +114,18 @@ void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int 
 			std::ifstream File(std::string("C:\\PARADOX\\client.dll").c_str(), std::ios::binary | std::ios::ate);
 			if (File.fail()) {
 				printf("PLUGIN: Error reading file C:/PARADOX/client.dll\n");
-				//ts3Functions.logMessage("Error reading file C:/PARADOX/client.dll", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
 				return;
 			}
 
 			DWORD srcSize = File.tellg();
 			if (srcSize < 0x1000) {
 				printf("PLUGIN: Invalid size of client.dll\n");
-				//ts3Functions.logMessage("Invalid size of client.dll", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
 				return;
 			}
 
 			BYTE* srcData = new BYTE[(UINT_PTR)srcSize];
 			if (!srcData) {
 				printf("PLUGIN: Error allocating client.dll\n");
-				//ts3Functions.logMessage("Error allocating client.dll", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
 				return;
 			}
 
@@ -138,19 +136,16 @@ void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int 
 			auto gtaProcId = CInjector::GetProcId(L"GTA5.exe");
 			if (gtaProcId == 0) {
 				printf("PLUGIN: Error getting GTA5.exe ...\n");
-				//ts3Functions.logMessage("Error getting GTA5.exe ...", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
 				return;
 			}
 
 			auto hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, gtaProcId);
 			if (!CInjector::ManualMap(hProcess, srcData)) {
 				printf("PLUGIN: Error injecting client.dll into GTA V...\n");
-				//ts3Functions.logMessage("Error injecting client.dll into GTA V...", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
 				return;
 			}
 			else {
 				printf("PLUGIN: Successful injecting client.dll into GTA V.\n");
-				//ts3Functions.logMessage("Successful injecting client.dll into GTA V.", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
 			}
 		}
 		else {
