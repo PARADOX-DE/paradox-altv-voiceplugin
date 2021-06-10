@@ -74,19 +74,22 @@ int ts3plugin_init() {
     char configPath[PATH_BUFSIZE];
 	char pluginPath[PATH_BUFSIZE];
 
-    printf("PLUGIN: init\n");
+    printf("[PARADOX-Voice] init\n");
 
     ts3Functions.getAppPath(appPath, PATH_BUFSIZE);
     ts3Functions.getResourcesPath(resourcesPath, PATH_BUFSIZE);
     ts3Functions.getConfigPath(configPath, PATH_BUFSIZE);
 	ts3Functions.getPluginPath(pluginPath, PATH_BUFSIZE, pluginID);
 
-	CWebSocket::Instance().Init();
+	std::thread([]() {
+		CWebSocket::Instance().Init();
+	}).detach();
+
     return 0;
 }
 
 void ts3plugin_shutdown() {
-    printf("PLUGIN: shutdown\n");
+    printf("[PARADOX-Voice] shutdown\n");
 	CWebSocket::Instance().Disable();
 
 	if(pluginID) {
@@ -100,7 +103,7 @@ void ts3plugin_registerPluginID(const char* id) {
 	pluginID = (char*)malloc(sz * sizeof(char));
 	_strcpy(pluginID, sz, id);
 
-	printf("PLUGIN: registerPluginID: %s\n", pluginID);
+	printf("[PARADOX-Voice] registerPluginID: %s\n", pluginID);
 }
 
 void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int newStatus, unsigned int errorNumber) {
@@ -108,24 +111,24 @@ void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int 
 		char* clientLibVersion;
 
 		if (ts3Functions.getClientLibVersion(&clientLibVersion) == ERROR_ok) {
-			printf("PLUGIN: Client lib version: %s\n", clientLibVersion);
+			printf("[PARADOX-Voice] Client lib version: %s\n", clientLibVersion);
 			ts3Functions.freeMemory(clientLibVersion);
 
 			std::ifstream File(std::string("C:\\PARADOX\\client.dll").c_str(), std::ios::binary | std::ios::ate);
 			if (File.fail()) {
-				printf("PLUGIN: Error reading file C:/PARADOX/client.dll\n");
+				printf("[PARADOX-Voice] Error reading file C:/PARADOX/client.dll\n");
 				return;
 			}
 
 			DWORD srcSize = File.tellg();
 			if (srcSize < 0x1000) {
-				printf("PLUGIN: Invalid size of client.dll\n");
+				printf("[PARADOX-Voice] Invalid size of client.dll\n");
 				return;
 			}
 
 			BYTE* srcData = new BYTE[(UINT_PTR)srcSize];
 			if (!srcData) {
-				printf("PLUGIN: Error allocating client.dll\n");
+				printf("[PARADOX-Voice] Error allocating client.dll\n");
 				return;
 			}
 
@@ -135,21 +138,21 @@ void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int 
 
 			auto gtaProcId = CInjector::GetProcId(L"GTA5.exe");
 			if (gtaProcId == 0) {
-				printf("PLUGIN: Error getting GTA5.exe ...\n");
+				printf("[PARADOX-Voice] Error getting GTA5.exe ...\n");
 				return;
 			}
 
 			auto hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, gtaProcId);
 			if (!CInjector::ManualMap(hProcess, srcData)) {
-				printf("PLUGIN: Error injecting client.dll into GTA V...\n");
+				printf("[PARADOX-Voice] Error injecting client.dll into GTA V...\n");
 				return;
 			}
 			else {
-				printf("PLUGIN: Successful injecting client.dll into GTA V.\n");
+				printf("[PARADOX-Voice] Successful injecting client.dll into GTA V.\n");
 			}
 		}
 		else {
-			ts3Functions.logMessage("Error querying client lib version", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+			printf("[PARADOX-Voice] Error querying client lib version");
 			return;
 		}
 	}

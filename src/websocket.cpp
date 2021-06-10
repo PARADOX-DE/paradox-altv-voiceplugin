@@ -9,16 +9,16 @@ void CWebSocket::Init() {
 
 	auto res = webSocket->listen();
 	if (!res.first) {
-		printf("[PARADOX][WEBSOCKET] Failed to start...\n");
+		printf("[PARADOX-Voice][WEBSOCKET] Failed to start...\n");
 		return;
 	}
 
 	webSocket->disablePerMessageDeflate();
 	webSocket->start();
 
-	printf("[PARADOX][WEBSOCKET] Started. Waiting for stop...\n");
+	printf("[PARADOX-Voice][WEBSOCKET] Started. Waiting for stop...\n");
 	webSocket->wait();
-	printf("[PARADOX][WEBSOCKET] Stopped. Closing thread...\n");
+	printf("[PARADOX-Voice][WEBSOCKET] Stopped. Closing thread...\n");
 	Sleep(2000);
 
 	ExitThread(0);
@@ -26,7 +26,7 @@ void CWebSocket::Init() {
 
 void CWebSocket::Disable() {
 	if (webSocket == nullptr) {
-		printf("[PARADOX][WEBSOCKET] Failed to stop...\n");
+		printf("[PARADOX-Voice][WEBSOCKET] Failed to stop...\n");
 		return;
 	}
 
