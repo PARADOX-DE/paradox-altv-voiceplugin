@@ -3,6 +3,9 @@
 #include "ixwebsocket/IXWebSocket.h"
 #include "ixwebsocket/IXWebSocketServer.h"
 #include "CSingleton.h"
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 class CWebSocket : public CSingleton<CWebSocket> {
 private:

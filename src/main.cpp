@@ -1,6 +1,7 @@
 #include "main.hpp"
 #include "injector.hpp"
 #include "websocket.hpp"
+#include "functions.hpp"
 
 static struct TS3Functions ts3Functions;
 
@@ -66,6 +67,7 @@ const char* ts3plugin_description() {
 
 void ts3plugin_setFunctionPointers(const struct TS3Functions funcs) {
     ts3Functions = funcs;
+	CFunctions::Instance().ts3functions = funcs;
 }
 
 int ts3plugin_init() {
