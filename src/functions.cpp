@@ -41,6 +41,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 			this->lastChannel = this->GetCurrentChannelId();
 
 			if (this->ts3functions.requestClientMove(this->serverHandle, Client, this->speechChannel, this->password, NULL) != ERROR_ok) return true;
+			this->SendServerCallback("error", "ALREADY_IN_VOICE");
 
 			this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Du befindest dich nun im Sprachchannel.");
 		}
