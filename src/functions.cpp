@@ -26,7 +26,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 
 	if (this->speechChannel == -1)
 	{
-
+		this->SendServerCallback("error", "VOICECHANNEL_NOT_FOUND"); // würde das lieber mit enums etc. reworkn
 
 		this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Es konnte kein Ingame Channel gefunden werden!");
 		return true;
