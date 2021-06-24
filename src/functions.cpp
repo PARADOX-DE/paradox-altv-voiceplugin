@@ -26,6 +26,8 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 
 	if (this->speechChannel == -1)
 	{
+
+
 		this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Es konnte kein Ingame Channel gefunden werden!");
 		return true;
 	}
@@ -39,6 +41,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 			this->lastChannel = this->GetCurrentChannelId();
 
 			if (this->ts3functions.requestClientMove(this->serverHandle, Client, this->speechChannel, this->password, NULL) != ERROR_ok) return true;
+
 			this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Du befindest dich nun im Sprachchannel.");
 		}
 
@@ -186,6 +189,15 @@ bool CFunctions::SetClientMuteState(anyID clientId, bool state)
 	}
 
 	return true;
+}
+
+void CFunctions::SendServerCallback(std::string method, std::string callback)
+{
+	json data;
+	data["method"] = method;
+	data["data"]["callback"] = callback;
+
+	CWebSocket::Instance().Send(data.dump());
 }
 
 anyID CFunctions::GetIdByName(const char* username)

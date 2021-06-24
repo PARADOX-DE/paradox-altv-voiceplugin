@@ -11,6 +11,7 @@
 #include "teamspeak/public_rare_definitions.h"
 #include "teamspeak/clientlib_publicdefinitions.h"
 #include "ts3_functions.h"
+#include "websocket.hpp"
 
 #include "CSingleton.h"
 #include "json.hpp"
@@ -38,6 +39,8 @@ public:
 	bool SetClientPosition(TS3_VECTOR Position);
 	bool SetTargetPositions(json jsonData);
 	bool SetClientMuteState(anyID clientId, bool state);
+
+	void SendServerCallback(std::string method, std::string callback);
 
 	uint64 GetCurrentChannelId();
 	anyID GetIdByName(const char* username);
