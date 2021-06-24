@@ -23,6 +23,9 @@ private:
 	bool clientsMuted = false;
 
 public:
+	bool microphoneMuted = false;
+	bool soundMuted = false;
+
 	uint64 serverHandle = -1;
 
 	uint64 speechChannel = -1;

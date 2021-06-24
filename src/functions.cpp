@@ -51,7 +51,15 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 
 bool CFunctions::ConnectedToServer(uint64 serverHandle)
 {
+	anyID Client;
+	if (this->ts3functions.getClientID(this->serverHandle, &Client) != ERROR_ok) return false;
+
 	this->serverHandle = serverHandle;
+	
+	int isMuted = 0;
+	if (this->ts3functions.getClientVariableAsInt(this->serverHandle, Client, CLIENT_IS_MUTED, &isMuted) != ERROR_ok) return false;
+	this->microphoneMuted = isMuted;
+
 	this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Du hast sich zu einem Server verbunden.");
 
 	return true;
@@ -158,6 +166,7 @@ bool CFunctions::SetClientMuteState(anyID clientId, bool state)
 	Client[1] = -1;
 
 	if (this->ts3functions.getClientVariableAsInt(this->serverHandle, clientId, CLIENT_IS_MUTED, &isMuted) != ERROR_ok) return false;
+	this->microphoneMuted = isMuted;
 
 	if (state)
 	{
