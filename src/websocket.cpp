@@ -50,6 +50,8 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 		auto msgJson = json::parse(msg->str);
 		auto method = msgJson["method"].get<std::string>();
 
+		printf("[PARADOX-Voice][WEBSOCKET] Received method: %s\n", method.c_str());
+
 		if (method.find("joinChannel") != std::string::npos) {
 			if (msgJson["data"]["channel"].is_null()) return;
 			if (msgJson["data"]["password"].is_null()) return;
@@ -61,7 +63,7 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 
 			if (!CFunctions::Instance().JoinChannel(channelName.c_str(), password.c_str(), username.c_str()))
 			{
-				CFunctions::Instance().ts3functions.printMessageToCurrentTab("[color=cyan]PARADOX Voice - Stell sicher das du dich auf dem richtigen Teamspeak befindest![/color]");
+				CFunctions::Instance().ts3functions.printMessageToCurrentTab("[color=white][PARADOX Voice] Stell sicher das du dich auf dem richtigen Teamspeak befindest![/color]");
 				return;
 			}
 		}
@@ -83,4 +85,8 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 			CFunctions::Instance().SetTargetPositions(msgJson);
 		}
 	}
+}
+
+void CWebSocket::Send(std::string& data) {
+	for (auto& client : webSocket->getClients()) client->send(data);
 }

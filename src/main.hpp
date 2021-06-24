@@ -39,6 +39,8 @@ PLUGINS_EXPORTDLL void ts3plugin_shutdown();
 PLUGINS_EXPORTDLL void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int newStatus, unsigned int errorNumber);
 PLUGINS_EXPORTDLL void ts3plugin_registerPluginID(const char* id);
 
+PLUGINS_EXPORTDLL void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int status, int isReceivedWhisper, anyID clientID);
+
 #ifdef __cplusplus
 }
 #endif

@@ -5,7 +5,6 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 	if (this->serverHandle == -1) return false;
 
 	uint64* Results = NULL;
-
 	this->ts3functions.getChannelList(this->serverHandle, &Results);
 
 	for (int i = 0; i < 1024; i++)
@@ -17,6 +16,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 
 		if (!strcmp(Name, channelname))
 		{
+			this->password = password;
 			this->speechChannel = Results[i];
 			this->ts3functions.freeMemory(Name);
 
@@ -26,7 +26,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 
 	if (this->speechChannel == -1)
 	{
-		this->ts3functions.printMessageToCurrentTab("[color=cyan]PARADOX-VOICE - Es konnte kein Ingame Channel gefunden werden!");
+		this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Es konnte kein Ingame Channel gefunden werden!");
 		return true;
 	}
 	else
@@ -38,11 +38,11 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 		{
 			this->lastChannel = this->GetCurrentChannelId();
 
-			if (this->ts3functions.requestClientMove(this->serverHandle, Client, this->speechChannel, password, NULL) != ERROR_ok) return true;
-			this->ts3functions.printMessageToCurrentTab("[PARADOX-VOICE] Du befindest dich nun im Sprachchannel.");
+			if (this->ts3functions.requestClientMove(this->serverHandle, Client, this->speechChannel, this->password, NULL) != ERROR_ok) return true;
+			this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Du befindest dich nun im Sprachchannel.");
 		}
 
-		if (!this->Changename(username)) return true;
+		if (!this->Changename(username)) return false;
 	}
 
 	this->ts3functions.freeMemory(Results);
@@ -52,7 +52,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 bool CFunctions::ConnectedToServer(uint64 serverHandle)
 {
 	this->serverHandle = serverHandle;
-	this->ts3functions.printMessageToCurrentTab("[PARADOX-VOICE] Du hast sich zu einem Server verbunden.");
+	this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Du hast sich zu einem Server verbunden.");
 
 	return true;
 }
@@ -89,7 +89,6 @@ bool CFunctions::SetClientPosition(TS3_VECTOR Position)
 }
 
 bool CFunctions::SetTargetPositions(json jsonData) {
-
 	if (this->serverHandle == -1) return false;
 
 	std::vector<std::string> client_username;

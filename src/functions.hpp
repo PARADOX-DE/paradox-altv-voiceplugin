@@ -27,6 +27,7 @@ public:
 
 	uint64 speechChannel = -1;
 	uint64 lastChannel = -1;
+	const char* password = "";
 
 	bool ConnectedToServer(uint64 serverHandle);
 	bool JoinChannel(const char* channelname, const char* password, const char* username);

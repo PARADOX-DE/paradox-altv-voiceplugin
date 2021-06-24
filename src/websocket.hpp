@@ -15,4 +15,5 @@ public:
 	void Disable();
 
 	void Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg);
+	void Send(std::string& data);
 };

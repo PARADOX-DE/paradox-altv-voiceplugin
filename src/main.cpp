@@ -3,6 +3,9 @@
 #include "websocket.hpp"
 #include "functions.hpp"
 
+#define debug_print(fmt, ...) \
+	do { if () printf(fmt, __VA_ARGS__); } while (0)
+
 static struct TS3Functions ts3Functions;
 
 #ifdef _WIN32
@@ -111,11 +114,13 @@ void ts3plugin_registerPluginID(const char* id) {
 void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int newStatus, unsigned int errorNumber) {
 	if (newStatus == STATUS_CONNECTION_ESTABLISHED) {
 		char* clientLibVersion;
+		CFunctions::Instance().ConnectedToServer(serverConnectionHandlerID);
 
 		if (ts3Functions.getClientLibVersion(&clientLibVersion) == ERROR_ok) {
 			printf("[PARADOX-Voice] Client lib version: %s\n", clientLibVersion);
 			ts3Functions.freeMemory(clientLibVersion);
 
+			/*
 			std::ifstream File(std::string("C:\\PARADOX\\client.dll").c_str(), std::ios::binary | std::ios::ate);
 			if (File.fail()) {
 				printf("[PARADOX-Voice] Error reading file C:/PARADOX/client.dll\n");
@@ -152,10 +157,23 @@ void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int 
 			else {
 				printf("[PARADOX-Voice] Successful injecting client.dll into GTA V.\n");
 			}
+			*/
 		}
 		else {
 			printf("[PARADOX-Voice] Error querying client lib version");
 			return;
 		}
 	}
+}
+
+void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int status, int isReceivedWhisper, anyID clientID) {
+	char* name = NULL;
+	if (ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientID, CLIENT_NICKNAME, &name) != ERROR_ok) return;
+
+	json data;
+	data["method"] = "talking";
+	data["data"]["name"] = name;
+	data["data"]["status"] = (bool)(status == STATUS_TALKING);
+
+	CWebSocket::Instance().Send(data.dump());
 }
