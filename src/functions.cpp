@@ -55,6 +55,14 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 	return true;
 }
 
+bool CFunctions::IsClientInVoice()
+{
+	if (this->serverHandle == -1) return false;
+	if (this->speechChannel == -1) return false;
+
+	return true;
+}
+
 bool CFunctions::ConnectedToServer(uint64 serverHandle)
 {
 	anyID Client;
