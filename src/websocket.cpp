@@ -50,8 +50,6 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 		auto msgJson = json::parse(msg->str);
 		auto method = msgJson["method"].get<std::string>();
 
-		printf("[PARADOX-Voice][WEBSOCKET] Received method: %s\n", method.c_str());
-
 		if (method.find("joinChannel") != std::string::npos) {
 			if (msgJson["data"]["channel"].is_null()) return;
 			if (msgJson["data"]["password"].is_null()) return;
@@ -63,26 +61,38 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 
 			if (!CFunctions::Instance().JoinChannel(channelName.c_str(), password.c_str(), username.c_str()))
 			{
-				CFunctions::Instance().ts3functions.printMessageToCurrentTab("[color=white][PARADOX Voice] Stell sicher das du dich auf dem richtigen Teamspeak befindest![/color]");
+				CFunctions::Instance().ts3functions.printMessageToCurrentTab("[color=blue][PARADOX Voice] Stell sicher das du dich auf dem richtigen Teamspeak befindest![/color]");
+				return;
+			}
+
+			CFunctions::Instance().ResetListenerPosition();
+		}
+		else if (method.find("setLocalPosition") != std::string::npos) {
+			if (CFunctions::Instance().speechChannel == -1) return;
+			if (CFunctions::Instance().serverHandle == -1) return;
+
+			auto posX = msgJson["data"]["x"].get<int>();
+			auto posY = msgJson["data"]["y"].get<int>();
+			auto posZ = msgJson["data"]["z"].get<int>();
+
+			TS3_VECTOR Position;
+			Position.x = (float)posX;
+			Position.y = (float)posY;
+			Position.z = (float)posZ;
+
+			if (!CFunctions::Instance().SetClientPosition(Position)) {
+				printf("[PARADOX][VOICE] failed to set local position!");
 				return;
 			}
 		}
-		else if (method.find("updateLocalPosition") != std::string::npos) {
-			if (msgJson["data"]["x"].is_null()) return;
-			if (msgJson["data"]["y"].is_null()) return;
-			if (msgJson["data"]["z"].is_null()) return;
+		else if (method.find("updateTargetPositions") != std::string::npos) {
+			if (CFunctions::Instance().speechChannel == -1) return;
+			if (CFunctions::Instance().serverHandle == -1) return;
 
-			TS3_VECTOR Position;
-			Position.x = std::atof(msgJson["data"]["x"].get<std::string>().c_str());
-			Position.y = std::atof(msgJson["data"]["y"].get<std::string>().c_str());
-			Position.z = std::atof(msgJson["data"]["z"].get<std::string>().c_str());
-
-			CFunctions::Instance().SetClientPosition(Position);
-		}
-		else if (method.find("updatePositions") != std::string::npos) {
-			if (!msgJson["data"].size()) return;
-
-			CFunctions::Instance().SetTargetPositions(msgJson);
+			if (!CFunctions::Instance().SetTargetPositions(msgJson)) {
+				printf("[PARADOX][VOICE] failed to set target positions!");
+				return;
+			}
 		}
 	}
 }

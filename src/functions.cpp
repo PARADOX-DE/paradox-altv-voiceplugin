@@ -1,3 +1,4 @@
+#include "websocket.hpp"
 #include "functions.hpp"
 
 bool CFunctions::JoinChannel(const char* channelname, const char* password, const char* username)
@@ -26,7 +27,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 
 	if (this->speechChannel == -1)
 	{
-		this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Es konnte kein Ingame Channel gefunden werden!");
+		this->ts3functions.printMessageToCurrentTab("[color=blue][PARADOX Voice] Es konnte kein Ingame Channel gefunden werden!");
 		return true;
 	}
 	else
@@ -37,23 +38,53 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 		if (this->GetCurrentChannelId() != this->speechChannel)
 		{
 			this->lastChannel = this->GetCurrentChannelId();
-
 			if (this->ts3functions.requestClientMove(this->serverHandle, Client, this->speechChannel, this->password, NULL) != ERROR_ok) return true;
-			this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Du befindest dich nun im Sprachchannel.");
+
+			//ResetListenerPosition();
+			//this->ts3functions.systemset3DSettings(this->serverHandle, 2.0f, 3.0f);
+			this->ts3functions.printMessageToCurrentTab("[color=blue][PARADOX Voice] Du befindest dich nun im Sprachchannel.");
 		}
 
-		if (!this->Changename(username)) return false;
+		if (!this->Changename(username)) return true;
 	}
 
 	this->ts3functions.freeMemory(Results);
 	return true;
 }
 
+bool CFunctions::ResetListenerPosition() {
+	TS3_VECTOR position;
+	position.x = 0;
+	position.y = 0;
+	position.z = 0;
+
+	TS3_VECTOR forward;
+	forward.x = 0;
+	forward.y = 0;
+	forward.z = 0;
+
+	TS3_VECTOR up;
+	up.x = 0;
+	up.y = 0;
+	up.z = 1;
+
+	if (this->ts3functions.systemset3DListenerAttributes(this->serverHandle, &position, &forward, &up) != ERROR_ok) {
+		printf("[PARADOX][VOICE] Unable to reset 3D system settings");
+		return false;
+	}
+
+	return true;
+}
+
 bool CFunctions::ConnectedToServer(uint64 serverHandle)
 {
 	this->serverHandle = serverHandle;
-	this->ts3functions.printMessageToCurrentTab("[color=white][PARADOX-VOICE] Du hast sich zu einem Server verbunden.");
+	this->ts3functions.printMessageToCurrentTab("[color=blue][PARADOX Voice] Du hast sich zu einem Server verbunden.");
 
+	json data;
+	data["method"] = "Connected";
+
+	CWebSocket::Instance().Send(data.dump());
 	return true;
 }
 
@@ -80,50 +111,49 @@ bool CFunctions::Changename(const char* username)
 	return true;
 }
 
-bool CFunctions::SetClientPosition(TS3_VECTOR Position)
-{
-	if (this->serverHandle == -1) return false;
-
+bool CFunctions::SetClientPosition(TS3_VECTOR Position) {
 	this->ts3functions.systemset3DListenerAttributes(this->serverHandle, &Position, NULL, NULL);
 	return true;
 }
 
-bool CFunctions::SetTargetPositions(json jsonData) {
-	if (this->serverHandle == -1) return false;
+int GetClientsCount(anyID* clients) {
+	int index = 0;
+	anyID id = clients[index];
 
-	std::vector<std::string> client_username;
-	std::vector<float> client_x;
-	std::vector<float> client_y;
-	std::vector<float> client_z;
-
-	for (auto& element : jsonData["data"])
-	{
-		client_username.push_back(element["username"]);
-
-		client_x.push_back(std::atof(element["x"].get<std::string>().c_str()));
-		client_y.push_back(std::atof(element["y"].get<std::string>().c_str()));
-		client_z.push_back(std::atof(element["z"].get<std::string>().c_str()));
+	while (id != 0) {
+		index++;
+		id = clients[index];
 	}
 
+	return index;
+}
+
+bool CFunctions::SetTargetPositions(json jsonData) {
 	anyID* Clients = NULL;
 	if (this->ts3functions.getChannelClientList(this->serverHandle, this->GetCurrentChannelId(), &Clients) != ERROR_ok) return false;
 
-	for (int i = 0; i < this->GetServerClientCount(); i++)
+	int length = GetClientsCount(Clients);
+	for (int i = 0; i < length; i++)
 	{
+		if (Clients[i] == NULL) return false;
+
 		char* tempUsername = NULL;
 		if (this->ts3functions.getClientVariableAsString(this->serverHandle, Clients[i], CLIENT_NICKNAME, &tempUsername) != ERROR_ok) return NULL;
 
 		bool isMuted = true;
-		for (int e = 0; e < jsonData["data"].size(); e++)
-		{
-			if (client_username[e].find(tempUsername) != std::string::npos)
-			{
+		for (auto& target : jsonData["data"]) {
+			auto name = target["name"].get<std::string>();
+			auto posX = target["x"].get<int>();
+			auto posY = target["y"].get<int>();
+			auto posZ = target["z"].get<int>();
+
+			if (name.find(tempUsername) != std::string::npos) {
 				isMuted = false;
 
 				TS3_VECTOR Position;
-				Position.x = client_x[e];
-				Position.y = client_y[e];
-				Position.z = client_z[e];
+				Position.x = (float)posX;
+				Position.y = (float)posY;
+				Position.z = (float)posZ;
 
 				this->ts3functions.channelset3DAttributes(this->serverHandle, Clients[i], &Position);
 			}
@@ -132,6 +162,9 @@ bool CFunctions::SetTargetPositions(json jsonData) {
 		this->SetClientMuteState(Clients[i], isMuted);
 		this->ts3functions.freeMemory(tempUsername);
 	}
+
+	this->ts3functions.freeMemory(Clients);
+	return true;
 }
 
 uint64 CFunctions::GetCurrentChannelId()
@@ -190,10 +223,6 @@ anyID CFunctions::GetIdByName(const char* username)
 	if (this->ts3functions.getClientList(this->serverHandle, &Clients) != ERROR_ok) return NULL;
 	if (this->ts3functions.getServerVariableAsInt(this->serverHandle, VIRTUALSERVER_CLIENTS_ONLINE, &Count) != ERROR_ok) return NULL;
 
-	char tempo[128];
-	sprintf_s(tempo, 128, "Count: %i\n", Count);
-	this->ts3functions.printMessageToCurrentTab(tempo);
-
 	for (int i = 0; i < Count; i++)
 	{
 		char* tempUsername = NULL;
@@ -202,8 +231,11 @@ anyID CFunctions::GetIdByName(const char* username)
 		if (!strcmp(username, tempUsername))
 		{
 			returnClient = Clients[i];
+			this->ts3functions.freeMemory(tempUsername);
 			break;
 		}
+
+		this->ts3functions.freeMemory(tempUsername);
 	}
 
 	return returnClient;

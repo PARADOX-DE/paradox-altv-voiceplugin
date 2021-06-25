@@ -35,6 +35,7 @@ public:
 	bool SetClientPosition(TS3_VECTOR Position);
 	bool SetTargetPositions(json jsonData);
 	bool SetClientMuteState(anyID clientId, bool state);
+	bool ResetListenerPosition();
 
 	uint64 GetCurrentChannelId();
 	anyID GetIdByName(const char* username);

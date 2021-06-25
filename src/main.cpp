@@ -177,3 +177,7 @@ void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int sta
 
 	CWebSocket::Instance().Send(data.dump());
 }
+
+void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHandlerID, anyID clientID, float distance, float* volume) {
+
+}

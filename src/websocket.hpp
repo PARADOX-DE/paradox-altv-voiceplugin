@@ -1,4 +1,4 @@
-#pragma on
+#pragma once
 #include "ixwebsocket/IXNetSystem.h"
 #include "ixwebsocket/IXWebSocket.h"
 #include "ixwebsocket/IXWebSocketServer.h"
