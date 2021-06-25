@@ -33,8 +33,6 @@ public:
 	uint64 lastChannel = -1;
 	const char* password = "";
 
-	bool IsClientInVoice();
-
 	bool ConnectedToServer(uint64 serverHandle);
 	bool JoinChannel(const char* channelname, const char* password, const char* username);
 	bool Changename(const char* username);
