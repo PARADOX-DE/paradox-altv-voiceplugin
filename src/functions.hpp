@@ -11,6 +11,7 @@
 #include "teamspeak/public_rare_definitions.h"
 #include "teamspeak/clientlib_publicdefinitions.h"
 #include "ts3_functions.h"
+#include "websocket.hpp"
 
 #include "CSingleton.h"
 #include "json.hpp"
@@ -23,11 +24,16 @@ private:
 	bool clientsMuted = false;
 
 public:
+	bool microphoneMuted = false;
+	bool soundMuted = false;
+
 	uint64 serverHandle = -1;
 
 	uint64 speechChannel = -1;
 	uint64 lastChannel = -1;
 	const char* password = "";
+
+	bool IsClientInVoice();
 
 	bool ConnectedToServer(uint64 serverHandle);
 	bool JoinChannel(const char* channelname, const char* password, const char* username);
@@ -36,6 +42,8 @@ public:
 	bool SetTargetPositions(json jsonData);
 	bool SetClientMuteState(anyID clientId, bool state);
 	bool ResetListenerPosition();
+
+	void SendServerCallback(std::string method, std::string callback);
 
 	uint64 GetCurrentChannelId();
 	anyID GetIdByName(const char* username);

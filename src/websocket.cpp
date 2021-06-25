@@ -94,6 +94,8 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 				return;
 			}
 		}
+		else if (method.find("isInVoice") != std::string::npos) 
+			CFunctions::Instance().SendServerCallback("isInVoice", CFunctions::Instance().IsClientInVoice() ? "true" : "false");
 	}
 }
 

@@ -48,6 +48,8 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 		if (!this->Changename(username)) return true;
 	}
 
+	this->SendServerCallback("success", "CONNECTED");
+
 	this->ts3functions.freeMemory(Results);
 	return true;
 }
@@ -78,6 +80,9 @@ bool CFunctions::ResetListenerPosition() {
 
 bool CFunctions::ConnectedToServer(uint64 serverHandle)
 {
+	anyID Client;
+	if (this->ts3functions.getClientID(this->serverHandle, &Client) != ERROR_ok) return false;
+
 	this->serverHandle = serverHandle;
 	this->ts3functions.printMessageToCurrentTab("[color=blue][PARADOX Voice] Du hast sich zu einem Server verbunden.");
 
@@ -191,6 +196,7 @@ bool CFunctions::SetClientMuteState(anyID clientId, bool state)
 	Client[1] = -1;
 
 	if (this->ts3functions.getClientVariableAsInt(this->serverHandle, clientId, CLIENT_IS_MUTED, &isMuted) != ERROR_ok) return false;
+	this->microphoneMuted = isMuted;
 
 	if (state)
 	{
@@ -210,6 +216,15 @@ bool CFunctions::SetClientMuteState(anyID clientId, bool state)
 	}
 
 	return true;
+}
+
+void CFunctions::SendServerCallback(std::string method, std::string callback)
+{
+	json data;
+	data["method"] = method;
+	data["data"]["callback"] = callback;
+
+	CWebSocket::Instance().Send(data.dump());
 }
 
 anyID CFunctions::GetIdByName(const char* username)
