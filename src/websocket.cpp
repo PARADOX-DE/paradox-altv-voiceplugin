@@ -38,8 +38,9 @@ void CWebSocket::Disable() {
 }
 
 void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
-	if (msg->type == ix::WebSocketMessageType::Open) {
-
+	if (msg->type == ix::WebSocketMessageType::Close) {
+		CFunctions::Instance().Reset();
+		printf("[PARADOX-Voice][WEBSOCKET] Reset\n");
 	}
 	else if (msg->type == ix::WebSocketMessageType::Message) {
 		if (!json::accept(msg->str)) {
@@ -81,7 +82,7 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 			Position.z = (float)posZ;
 
 			if (!CFunctions::Instance().SetClientPosition(Position)) {
-				printf("[PARADOX][VOICE] failed to set local position!");
+				printf("[PARADOX][VOICE] failed to set local position! \n");
 				return;
 			}
 		}
@@ -90,7 +91,7 @@ void CWebSocket::Listen(std::shared_ptr<ix::ConnectionState> connectionState, ix
 			if (CFunctions::Instance().serverHandle == -1) return;
 
 			if (!CFunctions::Instance().SetTargetPositions(msgJson)) {
-				printf("[PARADOX][VOICE] failed to set target positions!");
+				printf("[PARADOX][VOICE] failed to set target positions! \n");
 				return;
 			}
 		}

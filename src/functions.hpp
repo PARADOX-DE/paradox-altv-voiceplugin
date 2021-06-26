@@ -18,20 +18,21 @@
 
 using json = nlohmann::json;
 
+struct CachedPlayer {
+	std::string name;
+	anyID clientId;
+	TS3_VECTOR position;
+	float distance;
+	int voiceRange;
+	float volumeModifier;
+};
+
 class CFunctions : public CSingleton<CFunctions> {
 private:
 	char Name[128];
 	bool clientsMuted = false;
 
 public:
-	struct CachedPlayer {
-		std::string name;
-		anyID clientId;
-		TS3_VECTOR position;
-		float distance;
-		int voiceRange;
-	};
-
 	std::vector<CachedPlayer> cachedPlayers;
 	bool microphoneMuted = false;
 	bool soundMuted = false;
@@ -51,6 +52,7 @@ public:
 	bool SetClientMuteState(anyID clientId, bool state);
 	bool ResetListenerPosition();
 
+	void Reset();
 	void SendServerCallback(std::string method, std::string callback);
 
 	uint64 GetCurrentChannelId();

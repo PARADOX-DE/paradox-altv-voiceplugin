@@ -99,6 +99,8 @@ int ts3plugin_init() {
 
 void ts3plugin_shutdown() {
     printf("[PARADOX-Voice] shutdown\n");
+
+	CFunctions::Instance().Reset();
 	CWebSocket::Instance().Disable();
 
 	if(pluginID) {
@@ -165,7 +167,7 @@ void ts3plugin_onConnectStatusChangeEvent(uint64 serverConnectionHandlerID, int 
 			*/
 		}
 		else {
-			printf("[PARADOX-Voice] Error querying client lib version");
+			printf("[PARADOX-Voice] Error querying client lib version \n");
 			return;
 		}
 	}
@@ -184,24 +186,12 @@ void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int sta
 }
 
 void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHandlerID, anyID clientID, float distance, float* volume) {
-	*volume = 1.0f;
-}
-
-#include <vector>
-#include <algorithm>
-
-void ts3plugin_onEditPostProcessVoiceDataEvent(uint64 serverConnectionHandlerID, anyID clientID, short* samples, int sampleCount, int channels, const unsigned int* channelSpeakerArray, unsigned int* channelFillMask) {
-	auto& features = CFunctions::Instance();
-
-	auto target = features.GetCachedPlayerById(clientID);
+	auto target = CFunctions::Instance().GetCachedPlayerById(clientID);
 	if (target == nullptr) return;
 
-	auto VolumeOverride = 1.0f;
+	auto newVolume = (*volume - target->volumeModifier);
+	printf("[PARADOX][VOICE] customVolume: %s \n", std::to_string(newVolume).c_str());
 
-	std::vector<short> data(sampleCount * channels);
-
-	float val = (VolumeOverride != NULL) ? VolumeOverride : (1.0f - target->distance / target->voiceRange);
-	for (int i = 0; i < sampleCount * channels; i++) data[i] = static_cast<short>(min(32767.0f, max(-32768.0f, static_cast<float>(data[i]) * val)));
-
-	std::copy(data.begin(), data.end(), samples);
+	if (newVolume <= 15) *volume = newVolume;
+	else *volume = 1.0f;
 }

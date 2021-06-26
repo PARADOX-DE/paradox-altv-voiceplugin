@@ -41,7 +41,7 @@ bool CFunctions::JoinChannel(const char* channelname, const char* password, cons
 			if (this->ts3functions.requestClientMove(this->serverHandle, Client, this->speechChannel, this->password, NULL) != ERROR_ok) return true;
 
 			//ResetListenerPosition();
-			//this->ts3functions.systemset3DSettings(this->serverHandle, 2.0f, 3.0f);
+			this->ts3functions.systemset3DSettings(this->serverHandle, 2.0f, 6.0f);
 			this->ts3functions.printMessageToCurrentTab("[color=blue][PARADOX Voice] Du befindest dich nun im Sprachchannel.");
 		}
 
@@ -71,7 +71,7 @@ bool CFunctions::ResetListenerPosition() {
 	up.z = 1;
 
 	if (this->ts3functions.systemset3DListenerAttributes(this->serverHandle, &position, &forward, &up) != ERROR_ok) {
-		printf("[PARADOX][VOICE] Unable to reset 3D system settings");
+		printf("[PARADOX][VOICE] Unable to reset 3D system settings \n");
 		return false;
 	}
 
@@ -80,9 +80,6 @@ bool CFunctions::ResetListenerPosition() {
 
 bool CFunctions::ConnectedToServer(uint64 serverHandle)
 {
-	anyID Client;
-	if (this->ts3functions.getClientID(this->serverHandle, &Client) != ERROR_ok) return false;
-
 	this->serverHandle = serverHandle;
 	this->ts3functions.printMessageToCurrentTab("[color=blue][PARADOX Voice] Du hast sich zu einem Server verbunden.");
 
@@ -136,6 +133,7 @@ int GetClientsCount(anyID* clients) {
 bool CFunctions::SetTargetPositions(json jsonData) {
 	anyID* Clients = NULL;
 	if (this->ts3functions.getChannelClientList(this->serverHandle, this->GetCurrentChannelId(), &Clients) != ERROR_ok) return false;
+
 	cachedPlayers.clear();
 
 	int length = GetClientsCount(Clients);
@@ -154,6 +152,7 @@ bool CFunctions::SetTargetPositions(json jsonData) {
 			auto posZ = target["z"].get<int>();
 			auto distance = target["distance"].get<float>();
 			auto voiceRange = target["voiceRange"].get<int>();
+			auto volumeModifier = target["volumeModifier"].get<float>();
 
 			if (name.find(tempUsername) != std::string::npos) {
 				isMuted = false;
@@ -165,7 +164,7 @@ bool CFunctions::SetTargetPositions(json jsonData) {
 
 				this->ts3functions.channelset3DAttributes(this->serverHandle, Clients[i], &Position);
 
-				CachedPlayer player{ name, Clients[i], Position, distance, voiceRange };
+				CachedPlayer player{ name, Clients[i], Position, distance, voiceRange, volumeModifier };
 				cachedPlayers.emplace_back(player);
 			}
 		}
@@ -270,10 +269,37 @@ int CFunctions::GetServerClientCount()
 	return returnValue;
 }
 
-CFunctions::CachedPlayer* CFunctions::GetCachedPlayerById(anyID id) {
-	for (auto& player : cachedPlayers) {
-		if (player.clientId == id) return &player;
-	}
+CachedPlayer* CFunctions::GetCachedPlayerById(anyID id) {
+	for (auto& player : cachedPlayers) if (player.clientId == id) return &player;
 
 	return nullptr;
+}
+
+void CFunctions::Reset() {
+	auto oldName = this->Name;
+	auto oldChannel = this->lastChannel;
+
+	anyID Client;
+	if (this->ts3functions.getClientID(this->serverHandle, &Client) != ERROR_ok) return;
+
+	anyID* Clients = NULL;
+	if (this->ts3functions.getChannelClientList(this->serverHandle, this->GetCurrentChannelId(), &Clients) != ERROR_ok) return;
+
+	int length = GetClientsCount(Clients);
+	for (int i = 0; i < length; i++) {
+		TS3_VECTOR Position;
+
+		Position.x = (float)0;
+		Position.y = (float)0;
+		Position.z = (float)0;
+
+		this->ts3functions.channelset3DAttributes(this->serverHandle, Clients[i], &Position);
+		this->SetClientMuteState(Clients[i], false);
+	}
+
+	if (this->ts3functions.setClientSelfVariableAsString(this->serverHandle, CLIENT_NICKNAME, oldName) != ERROR_ok) return;
+	if (this->ts3functions.flushClientSelfUpdates(this->serverHandle, NULL) != ERROR_ok) return;
+	if (this->ts3functions.requestClientMove(this->serverHandle, Client, oldChannel, "", NULL) != ERROR_ok) return;
+
+	this->ResetListenerPosition();
 }
