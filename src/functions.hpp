@@ -24,6 +24,15 @@ private:
 	bool clientsMuted = false;
 
 public:
+	struct CachedPlayer {
+		std::string name;
+		anyID clientId;
+		TS3_VECTOR position;
+		float distance;
+		int voiceRange;
+	};
+
+	std::vector<CachedPlayer> cachedPlayers;
 	bool microphoneMuted = false;
 	bool soundMuted = false;
 
@@ -33,6 +42,7 @@ public:
 	uint64 lastChannel = -1;
 	const char* password = "";
 
+	CachedPlayer* GetCachedPlayerById(anyID id);
 	bool ConnectedToServer(uint64 serverHandle);
 	bool JoinChannel(const char* channelname, const char* password, const char* username);
 	bool Changename(const char* username);

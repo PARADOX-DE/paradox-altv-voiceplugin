@@ -1,3 +1,7 @@
+#define NOMINMAX
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+
 #include "main.hpp"
 #include "injector.hpp"
 #include "websocket.hpp"
@@ -105,8 +109,9 @@ void ts3plugin_shutdown() {
 
 void ts3plugin_registerPluginID(const char* id) {
 	const size_t sz = strlen(id) + 1;
+
 	pluginID = (char*)malloc(sz * sizeof(char));
-	_strcpy(pluginID, sz, id);
+	strcpy_s(pluginID, sz, id);
 
 	printf("[PARADOX-Voice] registerPluginID: %s\n", pluginID);
 }
@@ -182,7 +187,21 @@ void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHa
 	*volume = 1.0f;
 }
 
+#include <vector>
+#include <algorithm>
+
 void ts3plugin_onEditPostProcessVoiceDataEvent(uint64 serverConnectionHandlerID, anyID clientID, short* samples, int sampleCount, int channels, const unsigned int* channelSpeakerArray, unsigned int* channelFillMask) {
-	short* outputBuffer;
-	outputBuffer = (short*)malloc(sizeof(short) * sampleCount * channels);
+	auto& features = CFunctions::Instance();
+
+	auto target = features.GetCachedPlayerById(clientID);
+	if (target == nullptr) return;
+
+	auto VolumeOverride = 1.0f;
+
+	std::vector<short> data(sampleCount * channels);
+
+	float val = (VolumeOverride != NULL) ? VolumeOverride : (1.0f - target->distance / target->voiceRange);
+	for (int i = 0; i < sampleCount * channels; i++) data[i] = static_cast<short>(min(32767.0f, max(-32768.0f, static_cast<float>(data[i]) * val)));
+
+	std::copy(data.begin(), data.end(), samples);
 }

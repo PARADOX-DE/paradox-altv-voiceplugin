@@ -136,6 +136,7 @@ int GetClientsCount(anyID* clients) {
 bool CFunctions::SetTargetPositions(json jsonData) {
 	anyID* Clients = NULL;
 	if (this->ts3functions.getChannelClientList(this->serverHandle, this->GetCurrentChannelId(), &Clients) != ERROR_ok) return false;
+	cachedPlayers.clear();
 
 	int length = GetClientsCount(Clients);
 	for (int i = 0; i < length; i++)
@@ -151,6 +152,8 @@ bool CFunctions::SetTargetPositions(json jsonData) {
 			auto posX = target["x"].get<int>();
 			auto posY = target["y"].get<int>();
 			auto posZ = target["z"].get<int>();
+			auto distance = target["distance"].get<float>();
+			auto voiceRange = target["voiceRange"].get<int>();
 
 			if (name.find(tempUsername) != std::string::npos) {
 				isMuted = false;
@@ -161,6 +164,9 @@ bool CFunctions::SetTargetPositions(json jsonData) {
 				Position.z = (float)posZ;
 
 				this->ts3functions.channelset3DAttributes(this->serverHandle, Clients[i], &Position);
+
+				CachedPlayer player{ name, Clients[i], Position, distance, voiceRange };
+				cachedPlayers.emplace_back(player);
 			}
 		}
 
@@ -262,4 +268,12 @@ int CFunctions::GetServerClientCount()
 	if (this->ts3functions.getServerVariableAsInt(this->serverHandle, VIRTUALSERVER_CLIENTS_ONLINE, &returnValue) != ERROR_ok) return NULL;
 
 	return returnValue;
+}
+
+CFunctions::CachedPlayer* CFunctions::GetCachedPlayerById(anyID id) {
+	for (auto& player : cachedPlayers) {
+		if (player.clientId == id) return &player;
+	}
+
+	return nullptr;
 }
